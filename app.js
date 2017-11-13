@@ -54,34 +54,15 @@ io.sockets
   }))
   .on('authenticated', function(socket) {
     const email = socket.decoded_token.email;
-    console.log('hello! ' + email);
-    users.connect(db, email)
-      .then(() => users.assignRoom(db, 6))
-      .then(u => {
-        // users that were assigned
-        // get their socket to join it to a room...??
-        // or let client pull user information, and
-        // emit socket join event?
-        //
-      })
+    console.log('connected: ' + email);
 
-    // find games if games!!!
-    // then join room
-
-    users.activeGame(db, email)
-      .then(game => {
-        const room = game ? game : 'waiting-room'
-        return socket.join(room)
-      })
-
-    setTimeout(() => {
+    setInterval(() => {
       console.log('rooms: ', getRooms(socket))
-    }, 500)
+    }, 5000)
 
     socket
       .on('disconnect', () => {
         console.log('disconnect', email)
-        users.disconnect(db, email);
       })
       .on('SUBMIT_ORDER', payload => {
         console.log(socket.id)
@@ -89,14 +70,23 @@ io.sockets
         socket.to('foo').emit('SUBMIT_ORDER', payload);
         console.log('SUBMIT_ORDER', payload)
       })
+      .on('JOIN_WAITING_ROOM', game => {
+        socket.join('waiting-room');
+      })
       .on('JOIN_GAME', game => {
-        // users.addGame
-        // do something with socket
         socket.join(game).leave('waiting-room');
       })
   })
+
 // var _ = require('lodash')
 // setInterval(() => console.log('sockets: ', _.map(io.sockets.connected, c => c.rooms)), 2000)
+
+// when we have enough active users -- get their emails > 6
+// users.assignGames(db, emails);
+// emit NEW_GAMES event to waiting room
+setTimeout(() => io.to('waiting-room').emit('NEW_GAMES'), 10000)
+
+// when they join, add them to their user in db
 
 app.use(morgan('tiny'));
 app.use(cors());
