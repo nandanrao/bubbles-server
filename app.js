@@ -1,8 +1,4 @@
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
 var socketioJwt   = require("socketio-jwt");
-var jwt = require('jsonwebtoken');
 
 var jwt = require('express-jwt');
 var fs = require('fs');
@@ -17,7 +13,20 @@ var connections = require('./lib/connections');
 var _ = require('lodash')
 var mongo = require('mongodb');
 var MongoClient = mongo.MongoClient;
-var url = 'mongodb://localhost:27017/bubbles';
+
+
+var mongoHost = process.env.MONGO_HOST || 'localhost:27017/bubbles';
+var mongoUser = process.env.MONGO_USER;
+var mongoPass = process.env.MONGO_PASS;
+
+var url;
+
+if (mongoUser) {
+  url = `mongodb://${mongoUser}:${mongoPass}@${mongoHost}`;
+} else {
+  url = `mongodb://${mongoHost}`
+}
+
 
 let db;
 MongoClient
@@ -26,12 +35,16 @@ MongoClient
 
 const pem = fs.readFileSync('pem');
 
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
 io.sockets
   .on('connection', socketioJwt.authorize({
     secret: pem,
-    timeout: 15000,// 15 seconds to send the authentication message,
+    timeout: 240000, // 15 seconds to send the authentication message,
     algorithm: 'RS256',
-    callback: false
+    ignoreExpiration: false,
   }))
   .on('authenticated', function(socket) {
     connections.onAuth(socket, db);
@@ -42,9 +55,8 @@ setInterval(() => {
 }, 5000)
 
 setInterval(() => {
-  users.checkWaitingRoom(io, db, 2)
-}, 5000)
-
+  users.checkWaitingRoom(io, db, 2) // HOW MANY USERS!
+}, 2000)
 
 
 app.use(morgan('tiny'));
@@ -71,7 +83,7 @@ app.get('/dividends/:game', (req, res) => {
 });
 
 app.get('/orders/:game', (req, res) => {
-  db.collection('orders').find({ game: game })
+  db.collection('orders').find({ 'game._id': req.params.game })
     .toArray()
     .then(ords => res.json(ords))
 });
