@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "forever app.js",
+    "dev": "nodemon app.js",
     "test": "mocha --watch --colors lib/**/*.test.js"
   },
   "author": "",
