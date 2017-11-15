@@ -15,9 +15,11 @@ var mongo = require('mongodb');
 var MongoClient = mongo.MongoClient;
 
 
+var numUsers = +process.env.BUBBLES_USERS || 2;
 var mongoHost = process.env.MONGO_HOST || 'localhost:27017/bubbles';
 var mongoUser = process.env.MONGO_USER;
 var mongoPass = process.env.MONGO_PASS;
+
 
 var url;
 
@@ -55,7 +57,7 @@ setInterval(() => {
 }, 5000)
 
 setInterval(() => {
-  users.checkWaitingRoom(io, db, 2) // HOW MANY USERS!
+  users.checkWaitingRoom(io, db, numUsers) // HOW MANY USERS!
 }, 2000)
 
 
