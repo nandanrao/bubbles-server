@@ -71,7 +71,6 @@ app.get('/user', (req, res) => {
     .findOne({ email: req.user.email })
     .then(user => {
       if (user) return res.json(user)
-      console.log('user get!!!!')
       users
         .createUser(db, req.user)
         .then(user => res.json(user))
